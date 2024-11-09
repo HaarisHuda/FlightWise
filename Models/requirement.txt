@@ -5,3 +5,5 @@ scikit-learn
 prettytable
 seaborn
 openpyxl
+cuml
+cudf
