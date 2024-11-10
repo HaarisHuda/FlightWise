@@ -1,0 +1,9 @@
+numpy
+pandas
+matplotlib
+scikit-learn
+prettytable
+seaborn
+openpyxl
+cuml
+cudf
