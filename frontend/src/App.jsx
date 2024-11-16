@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import BookingForm from './pages/BookingForm';
 import { AuthProvider } from './context/AuthContext';
+import PayPalComponent from './components/PayPalComponent';
 import FlightResults from './components/FlightResults';
 
 const theme = createTheme({
@@ -35,6 +36,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/booking" element={<BookingForm />} />
+              <Route path="/paypal" element={<PayPalComponent />} />
             </Routes>
           </div>
         </Router>
