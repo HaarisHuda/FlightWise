@@ -30,8 +30,8 @@ class FlightSearchView(APIView):
     def post(self, request):
         origin = request.data.get("origin")
         destination = request.data.get("destination")
-        departure_date = request.data.get("departure_date")
-        return_date = request.data.get("return_date")
+        departure_date = request.data.get("departureDate")[:10]
+        return_date = request.data.get("returnDate")[:10]
 
         if not origin or not destination or not departure_date:
             return Response({"error": "Origin, destination, and departure date are required."},
