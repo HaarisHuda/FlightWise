@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import BookingForm from './pages/BookingForm';
 import { AuthProvider } from './context/AuthContext';
+import FlightResults from './components/FlightResults';
 
 const theme = createTheme({
   palette: {
@@ -30,6 +31,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/flight/search" element={<FlightSearch />} />
+              <Route path="/flights/results" element={<FlightResults />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/booking" element={<BookingForm />} />

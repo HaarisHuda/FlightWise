@@ -1,124 +1,174 @@
-import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  Typography, 
-  Button, 
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Button,
   Chip,
-  Divider 
+  Divider,
+  Grid
 } from '@mui/material';
-import { Plane, Clock, DollarSign } from 'lucide-react';
+import { Plane, Clock, CalendarDays, Luggage } from 'lucide-react';
 
-const FlightResults = ({ flights }) => {
-  const formatDuration = (duration) => {
-    const hours = Math.floor(duration / 60);
-    const minutes = duration % 60;
-    return `${hours}h ${minutes}m`;
+const formatDateTime = (dateTimeStr) => {
+  const date = new Date(dateTimeStr);
+  return {
+    time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   };
+};
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+const formatDuration = (duration) => {
+  const matches = duration.match(/PT(\d+)H(\d+)M/);
+  if (matches) {
+    return `${matches[1]}h ${matches[2]}m`;
+  }
+  return duration;
+};
+
+const FlightSegment = ({ segment, isLastSegment }) => {
+  const departure = formatDateTime(segment.departure.at);
+  const arrival = formatDateTime(segment.arrival.at);
+
+  return (
+    <Box sx={{ mb: isLastSegment ? 0 : 4 }}>
+      <Grid container alignItems="center" spacing={2}>
+        <Grid item xs={4}>
+          <Box>
+            <Typography variant="h5" fontWeight="bold">{departure.time}</Typography>
+            <Typography variant="body2" color="text.secondary">{departure.date}</Typography>
+            <Typography variant="h6">{segment.departure.iataCode}</Typography>
+          </Box>
+        </Grid>
+
+        <Grid item xs={4}>
+          <Box textAlign="center">
+            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={16} style={{ marginRight: 4 }} />
+              {formatDuration(segment.duration)}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+              <Divider sx={{ flex: 1 }} />
+              <Plane style={{ margin: '0 8px', color: '#1976d2' }} size={20} />
+              <Divider sx={{ flex: 1 }} />
+            </Box>
+            <Typography variant="body2">{segment.carrierCode}</Typography>
+          </Box>
+        </Grid>
+
+        <Grid item xs={4}>
+          <Box textAlign="right">
+            <Typography variant="h5" fontWeight="bold">{arrival.time}</Typography>
+            <Typography variant="body2" color="text.secondary">{arrival.date}</Typography>
+            <Typography variant="h6">{segment.arrival.iataCode}</Typography>
+          </Box>
+        </Grid>
+      </Grid>
+
+      {!isLastSegment && (
+        <Box sx={{ my: 2 }}>
+          <Divider />
+          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 1 }}>
+            Connection
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const FlightItinerary = ({ itinerary, isReturn }) => (
+  <Paper elevation={2} sx={{ p: 3, mb: 2 }}>
+    <Box sx={{ mb: 2 }}>
+      <Chip 
+        label={isReturn ? "Return Flight" : "Outbound Flight"}
+        color={isReturn ? "secondary" : "primary"}
+        size="small"
+        sx={{ mb: 1 }}
+      />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <CalendarDays size={16} />
+        <Typography variant="body2" color="text.secondary">
+          {formatDateTime(itinerary.segments[0].departure.at).date}
+        </Typography>
+      </Box>
+    </Box>
+
+    {itinerary.segments.map((segment, idx) => (
+      <FlightSegment
+        key={idx}
+        segment={segment}
+        isLastSegment={idx === itinerary.segments.length - 1}
+      />
+    ))}
+  </Paper>
+);
+
+const FlightResult = ({ flight }) => {
+  const handleBooking = () => {
+    console.log('Booking flight:', flight);
   };
 
   return (
-    <div className="space-y-4">
-      {flights?.map((flight, index) => (
-        <Card key={index} className="hover:shadow-lg transition-shadow">
-          <CardContent>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-              {/* Airline Info */}
-              <div className="flex items-center space-x-4">
-                <img 
-                  src={flight.airlineLogo || '/api/placeholder/50/50'} 
-                  alt={flight.airline}
-                  className="w-12 h-12 object-contain"
-                />
-                <div>
-                  <Typography variant="h6">{flight.airline}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Flight {flight.flightNumber}
-                  </Typography>
-                </div>
-              </div>
+    <Paper elevation={3} sx={{ mb: 4, p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold">€{flight.price.total}</Typography>
+          <Typography variant="body2" color="text.secondary">per person</Typography>
+        </Box>
+        <Box sx={{ textAlign: 'right' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Luggage size={16} />
+            <Typography variant="body2" color="text.secondary">
+              No checked bags included
+            </Typography>
+          </Box>
+          <Button 
+            variant="contained" 
+            onClick={handleBooking}
+            sx={{ minWidth: 200 }}
+          >
+            Book Now
+          </Button>
+        </Box>
+      </Box>
 
-              {/* Flight Times */}
-              <div className="flex items-center space-x-8">
-                <div className="text-center">
-                  <Typography variant="h6">{formatTime(flight.departureTime)}</Typography>
-                  <Typography variant="body2">{flight.origin}</Typography>
-                </div>
-                
-                <div className="flex flex-col items-center">
-                  <Clock className="h-5 w-5 text-gray-400" />
-                  <Typography variant="body2">
-                    {formatDuration(flight.duration)}
-                  </Typography>
-                  <div className="relative w-32">
-                    <Divider />
-                    <Plane className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 rotate-90 h-4 w-4 text-indigo-600" />
-                  </div>
-                  <Typography variant="body2" color="text.secondary">
-                    {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
-                  </Typography>
-                </div>
-
-                <div className="text-center">
-                  <Typography variant="h6">{formatTime(flight.arrivalTime)}</Typography>
-                  <Typography variant="body2">{flight.destination}</Typography>
-                </div>
-              </div>
-
-              {/* Price and Book Button */}
-              <div className="flex flex-col items-end space-y-2">
-                <div className="text-right">
-                  <Typography variant="h5" color="primary" className="flex items-center">
-                    <DollarSign className="h-5 w-5" />
-                    {flight.price}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    per person
-                  </Typography>
-                </div>
-                <Button 
-                  variant="contained" 
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Select Flight
-                </Button>
-              </div>
-            </div>
-
-            {/* Flight Details */}
-            <div className="mt-4">
-              <div className="flex flex-wrap gap-2">
-                <Chip 
-                  label={`${flight.cabinClass} Class`} 
-                  size="small" 
-                  className="bg-gray-100"
-                />
-                <Chip 
-                  label={`${flight.seatsAvailable} seats left`} 
-                  size="small" 
-                  className="bg-gray-100"
-                />
-                {flight.features?.map((feature, idx) => (
-                  <Chip 
-                    key={idx} 
-                    label={feature} 
-                    size="small" 
-                    className="bg-gray-100"
-                  />
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {flight.itineraries.map((itinerary, idx) => (
+        <FlightItinerary
+          key={idx}
+          itinerary={itinerary}
+          isReturn={idx === 1}
+        />
       ))}
-    </div>
+    </Paper>
+  );
+};
+
+const FlightResults = () => {
+  const location = useLocation();
+  const [flights, setFlights] = useState([]);
+
+  useEffect(() => {
+    // Retrieve flights data from local storage
+    const storedFlights = localStorage.getItem('flights');
+    if (storedFlights) {
+    //   console.log('Retrieved flights data from localStorage:', storedFlights);
+      setFlights(JSON.parse(storedFlights).flights);
+    } else {
+      console.warn('No flights data found in localStorage.');
+    }
+  }, []);
+  return (
+    <Container maxWidth="md" sx={{ py: 8 }}>
+      <Typography variant="h4" component="h1" sx={{ mb: 4 }}>
+        Flight Results
+      </Typography>
+      {flights.map((flight, idx) => (
+        <FlightResult key={idx} flight={flight} />
+      ))}
+    </Container>
   );
 };
 
