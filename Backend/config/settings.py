@@ -8,7 +8,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-t0&bsur2_#32fqehv+0$u-o*z=
 
 DEBUG = True
 # APPEND_SLASH = False
-ALLOWED_HOSTS = [] 
+ALLOWED_HOSTS = ['*'] 
 CSRF_TRUSTED_ORIGINS = []
 
 INSTALLED_APPS = [
