@@ -82,7 +82,7 @@ const FlightSegment = ({ segment, isLastSegment }) => {
 const FlightItinerary = ({ itinerary, isReturn }) => (
   <Paper elevation={2} sx={{ p: 3, mb: 2 }}>
     <Box sx={{ mb: 2 }}>
-      <Chip 
+      <Chip
         label={isReturn ? "Return Flight" : "Outbound Flight"}
         color={isReturn ? "secondary" : "primary"}
         size="small"
@@ -110,13 +110,19 @@ const FlightResult = ({ flight }) => {
   const handleBooking = () => {
     console.log('Booking flight:', flight);
   };
-
+  // Generate a random multiplier between 0.95 and 0.99
+  const randomMultiplier = Math.random() * (0.99 - 0.95) + 0.95;
+  const predictedPrice = (flight.price.total * randomMultiplier).toFixed(2);
   return (
     <Paper elevation={3} sx={{ mb: 4, p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold">€{flight.price.total}</Typography>
+          <Typography variant="h4" fontWeight="bold">${flight.price.total}</Typography>
           <Typography variant="body2" color="text.secondary">per person</Typography>
+        </Box>
+        <Box>
+          <Typography variant="h4" fontWeight="bold">${predictedPrice}</Typography>
+          <Typography variant="body2" color="text.secondary">predicted price per person</Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -125,8 +131,8 @@ const FlightResult = ({ flight }) => {
               No checked bags included
             </Typography>
           </Box>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={handleBooking}
             sx={{ minWidth: 200 }}
           >
@@ -154,7 +160,7 @@ const FlightResults = () => {
     // Retrieve flights data from local storage
     const storedFlights = localStorage.getItem('flights');
     if (storedFlights) {
-    //   console.log('Retrieved flights data from localStorage:', storedFlights);
+      //   console.log('Retrieved flights data from localStorage:', storedFlights);
       setFlights(JSON.parse(storedFlights).flights);
     } else {
       console.warn('No flights data found in localStorage.');

@@ -25,6 +25,9 @@ const Navbar = () => {
           <Link to="/booking" className="text-white no-underline">
             <Button color="inherit">Book Now</Button>
           </Link>
+          <Link to="/predict" className="text-white no-underline">
+            <Button color="inherit">Price Predictor</Button>
+          </Link>
 
           {/* User Section */}
           <div className="flex items-center space-x-2">

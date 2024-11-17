@@ -2,3 +2,4 @@ fw
 Backend/.env
 flight
 test
+*Flight_ticket_model_gpu.joblib*

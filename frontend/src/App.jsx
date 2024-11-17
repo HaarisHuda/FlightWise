@@ -10,6 +10,7 @@ import BookingForm from './pages/BookingForm';
 import { AuthProvider } from './context/AuthContext';
 import PayPalComponent from './components/PayPalComponent';
 import FlightResults from './components/FlightResults';
+import FlightPricePredictor from './components/FlightPricePredictor';
 
 const theme = createTheme({
   palette: {
@@ -37,6 +38,7 @@ const App = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/booking" element={<BookingForm />} />
               <Route path="/paypal" element={<PayPalComponent />} />
+              <Route path="/predict" element={<FlightPricePredictor />} />
             </Routes>
           </div>
         </Router>

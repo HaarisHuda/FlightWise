@@ -177,3 +177,119 @@ class PayPalExecutePaymentView(APIView):
             return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Error executing payment"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+import joblib
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import pandas as pd
+import numpy as np
+import os 
+
+# Load the model and its components
+model_elements = joblib.load(os.path.join(os.path.dirname(__file__), 'Flight_ticket_model_gpu.joblib'))
+
+@api_view(['POST'])
+def predict_flight_price(request):
+    try:
+        # Get the input columns from model_elements
+        inputs_cols = model_elements['input_cols']
+        
+        # First, create a dictionary with explicit type conversion
+        input_data = {
+            # Categorical columns - keep as strings
+            'airline': str(request.data.get('airline', '')),
+            'source_city': str(request.data.get('source_city', '')),
+            'departure_time': str(request.data.get('departure_time', '')),
+            'arrival_time': str(request.data.get('arrival_time', '')),
+            'destination_city': str(request.data.get('destination_city', '')),
+            'class': str(request.data.get('class', '')),
+            
+            # Numeric columns - convert to float32
+            'stops': np.float32(request.data.get('stops', 0)),
+            'duration': np.float32(request.data.get('duration', 0)),
+            'days_left': np.float32(request.data.get('days_left', 0))
+        }
+
+        # Create DataFrame with correct column order
+        input_df = pd.DataFrame([input_data], columns=inputs_cols)
+
+        # Get numeric and categorical columns from model_elements
+        numeric_cols = model_elements['numeric_cols']
+        categorical_cols = model_elements['categorical_cols']
+
+        # Ensure numeric columns are float32
+        for col in numeric_cols:
+            input_df[col] = pd.to_numeric(input_df[col], errors='coerce').astype(np.float32)
+
+        # Ensure categorical columns are string
+        for col in categorical_cols:
+            input_df[col] = input_df[col].astype(str)
+
+        # Print debug information
+        print("Input DataFrame Types:")
+        print(input_df.dtypes)
+        print("Input DataFrame Columns:", input_df.columns.tolist())
+
+        # Scale numeric features
+        scaled_numeric = model_elements['scaler'].transform(input_df[numeric_cols].astype(np.float32))
+        input_df[numeric_cols] = scaled_numeric
+
+        # Encode categorical features
+        encoded_cats = model_elements['encoder'].transform(input_df[categorical_cols])
+        encoded_df = pd.DataFrame(
+            encoded_cats,
+            columns=model_elements['encoded_cols']
+        )
+
+        # Print debug information
+        print("Encoded DataFrame Columns:", encoded_df.columns.tolist())
+
+        # Combine features in the correct order
+        feature_cols = numeric_cols + model_elements['encoded_cols'].tolist()
+        X = pd.concat([
+            input_df[numeric_cols],
+            encoded_df
+        ], axis=1)
+        
+        # Ensure column order matches training data
+        X = X[feature_cols]
+
+        # Convert to numpy array with explicit dtype
+        X_array = X.astype(np.float32).to_numpy()
+
+        # Print debug information
+        print("Final array shape:", X_array.shape)
+        print("Final array dtype:", X_array.dtype)
+        print("Final feature names:", X.columns.tolist())
+
+        # Convert GPU model to CPU if necessary
+        if hasattr(model_elements['model'], 'to_cpu'):
+            model = model_elements['model'].to_cpu()
+        else:
+            model = model_elements['model']
+
+        # Make prediction
+        prediction = float(model.predict(X_array)[0])
+
+        return Response({
+            'status': 'success',
+            'predicted_price': round(prediction, 2),
+            'input_processed': {
+                'numeric': input_df[numeric_cols].to_dict(orient='records')[0],
+                'categorical': input_df[categorical_cols].to_dict(orient='records')[0]
+            }
+        })
+
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print("Error occurred:")
+        print(error_traceback)
+        
+        return Response({
+            'status': 'error',
+            'message': str(e),
+            'type': str(type(e)),
+            'traceback': error_traceback
+        }, status=400)
